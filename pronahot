@@ -1,0 +1,234 @@
+#!/usr/bin/python3.4
+# -*- coding: utf-8 -*-
+
+# ProNAhot: Predicting protein-DNA, protein-RNA and protein-protein binding hot-spots from sequence
+#
+# Written by Jiajun Qiu <jiajunqiu@hotmail.com>
+#
+# Copyright (c) 2020 Jiajun Qiu  <jiajunqiu@hotmail.com>
+
+import os
+import os.path
+import sys
+import tempfile
+from optparse import OptionParser
+import glob
+from sklearn.externals import joblib
+import numpy as np
+from pronaHotMod.pp2features import extract_features
+from pronaHotMod.pssm_reorder import extract_features as pssm_extract
+from pronaHotMod.utils import new_dct
+from pronaHotMod.utils import new_dwt
+from pronaHotMod.utils import expand_list,sigmoid,read_prona
+import subprocess
+import pickle
+import re
+import shutil
+
+#dir_path = '/usr/share/prona2019'
+dir_path = '/mnt/project/predbind/package/trunk'
+
+tmp_dir = tempfile.mkdtemp()
+
+
+
+
+#Commandline parsing
+disc = "ProNAhot: Predicting protein-DNA, protein-RNA and protein-protein binding hot-spots from sequence"
+usage = "usage: %prog [options]"
+parser = OptionParser(usage=usage,description = disc)
+parser.add_option("-p", action="store", type="string", dest="path", help="Directory containing the PredictProtein output files with the suffixes .in .fasta .blastPsiMat .profbval .mdisorder .consurf.grades and .profRdb.")
+parser.add_option("-l", action="store", type="string", dest="label", help="Please label the binding residues for your input protein and the format can be found in file ./test/binding_label.example. ProNAHot can only distinguish between binding hotspots and binding non-hotspots.If you do not known the binding information of your input protein, you can run ProNA2020 from predictprotein.org and submit the output here with the suffixe .prona.")
+parser.add_option("-o", action="store", type="string", dest="filename", help="Output file. If not specified, the output is written to STDOUT.")
+
+options, args = parser.parse_args()
+
+
+pp_path = options.path
+label_file=options.label
+outfile = options.filename 
+
+
+if not pp_path:
+    parser.print_help()
+    sys.exit()
+
+if pp_path[-1] != '/':
+    pp_path += '/'
+
+suffixes = ['in','fasta','blastPsiMat','profbval','mdisorder','consurf.grades','profRdb']
+input_fils = glob.glob(pp_path+'*')
+for f in input_fils:
+    if f.split('.')[-1] in suffixes:
+        shutil.copy(f,tmp_dir + '/query.'+f.split('.')[-1])
+file_check = glob.glob(tmp_dir+'/*')
+if len(file_check)==0:
+    sys.exit('Error!!!Directory must contain the PredictProtein output files with the suffixes .in .fasta .blastPsiMat .profbval .mdisorder .consurf.grades and .profRdb.')
+
+
+binding_labels={'Protein':[],'DNA':[],'RNA':[]}
+try:
+    if label_file.split('.')[-1]=='prona':
+        Pro_bind,DNA_bind,RNA_bind = read_prona(label_file)
+        binding_labels['Protein']=Pro_bind
+        binding_labels['DNA']=DNA_bind
+        binding_labels['RNA']=RNA_bind
+    else:
+        for l in open(label_file):
+            l=l.rstrip()
+            if '#' in l:
+                continue
+            if '>' in l:
+                bl=l[1:]
+            else:
+                binding_labels[bl]=[int(r) for r in l]
+except:
+    sys.exit('Please label the binding residues on the input protein correctly.')
+            
+if len(binding_labels['Protein'])==0 and len(binding_labels['DNA'])==0 and len(binding_labels['RNA'])==0:
+    sys.exit('Please label the binding residues on the input protein correctly.')
+
+
+
+tst_fas = tmp_dir+'/query.fasta'
+
+
+
+
+data_DNA,pro,seq = extract_features(pp_path ,'./models/DNA/selected_features')
+data_RNA,pro,seq = extract_features(pp_path ,'./models/RNA/selected_features')
+data_Pro,pro,seq = extract_features(pp_path ,'./models/Protein/selected_features')
+
+pssm_DNA,_,_ = pssm_extract(pp_path, './models/DNA/selected_feature_pssm')
+pssm_RNA,_,_ = pssm_extract(pp_path, './models/RNA/selected_feature_pssm')
+pssm_Pro,_,_ = pssm_extract(pp_path, './models/Protein/selected_feature_pssm')
+
+perc_DNA,_,_ = pssm_extract(pp_path, './models/DNA/selected_feature_perc')
+perc_RNA,_,_ = pssm_extract(pp_path, './models/RNA/selected_feature_perc')
+perc_Pro,_,_ = pssm_extract(pp_path, './models/Protein/selected_feature_perc')
+
+
+data = {'DNA':data_DNA,'RNA':data_RNA,'Protein':data_Pro}
+pssm = {'DNA':pssm_DNA,'RNA':pssm_RNA,'Protein':pssm_Pro}
+perc = {'DNA':perc_DNA,'RNA':perc_RNA,'Protein':perc_Pro}
+
+preds = {'DNA':np.zeros(len(seq)),'RNA':np.zeros(len(seq)),'Protein':np.zeros(len(seq))}
+
+#run protein-protein binding hotspot prediction
+models=glob.glob('./models/Protein/*SVM*')
+if len(binding_labels['Protein'])==0:
+    models=[]
+    binding_labels['Protein']='*'*len(seq)
+for m in models:
+    fold=m.split('_')[1][3:]
+    pca_pssm=joblib.load('./models/Protein/pca_pssm3_'+fold+'.pkl')
+    pca_perc=joblib.load('./models/Protein/pca_perc3_'+fold+'.pkl')
+
+    for n in range(len(seq)):    
+        perc_tmp=list(expand_list(perc['Protein'][n]))
+        pssm_tmp=list(expand_list(pssm['Protein'][n]))
+        perc_trans=pca_perc.transform(np.array(perc_tmp).reshape(1,-1))[0]
+        pssm_trans=pca_pssm.transform(np.array(pssm_tmp).reshape(1,-1))[0]
+#        print(np.concatenate((pssm_pca,perc_pca,data['Protein'][n])))
+        try:
+            pssm_perc=np.row_stack((pssm_perc,np.concatenate((pssm_trans,perc_trans))))
+        except NameError:
+            pssm_perc=np.concatenate((pssm_trans,perc_trans)) 
+
+    pssm_perc_data=np.concatenate((pssm_perc,data['Protein']),axis=1)
+#    print(pssm_perc_data[60])
+   
+    clf = joblib.load(m)
+
+    predict_scores = clf.decision_function(pssm_perc_data)
+    preds['Protein']=preds['Protein']+predict_scores
+
+    del pssm_perc
+    del pssm_perc_data 
+
+
+
+#run protein-DNA binding hotspot prediction
+models=glob.glob('./models/DNA/*SVM*')
+if len(binding_labels['DNA'])==0:
+    models=[]
+    binding_labels['DNA']='*'*len(seq)
+for m in models:
+    fold=m.split('_')[1][3:]
+    for n in range(len(seq)):
+        pssm_trans = new_dct(pssm['DNA'][n],13)
+        perc_trans = new_dwt(perc['DNA'][n]) 
+#        print(np.concatenate((pssm_pca,perc_pca,data['Protein'][n])))
+        try:
+            pssm_perc=np.row_stack((pssm_perc,np.concatenate((pssm_trans,perc_trans))))
+        except NameError:
+            pssm_perc=np.concatenate((pssm_trans,perc_trans))
+
+    pssm_perc_data=np.concatenate((pssm_perc,data['DNA']),axis=1)
+#    print(pssm_perc_data[60])
+
+    clf = joblib.load(m)
+
+    predict_scores = clf.decision_function(pssm_perc_data)
+    preds['DNA']=preds['DNA']+predict_scores
+
+    del pssm_perc
+    del pssm_perc_data
+
+
+#run protein-RNA binding hotspot prediction
+models=glob.glob('./models/RNA/*SVM*')
+if len(binding_labels['RNA'])==0:
+    models=[]
+    binding_labels['RNA']='*'*len(seq)
+for m in models:
+    fold=m.split('_')[1][3:]
+    pca_perc=joblib.load('./models/RNA/pca_perc3_'+fold+'.pkl')
+    for n in range(len(seq)):
+        pssm_trans = new_dwt(pssm['RNA'][n])
+        perc_tmp=list(expand_list(perc['RNA'][n]))
+        perc_trans=pca_perc.transform(np.array(perc_tmp).reshape(1,-1))[0]
+#        print(np.concatenate((pssm_pca,perc_pca,data['Protein'][n])))
+        try:
+            pssm_perc=np.row_stack((pssm_perc,np.concatenate((pssm_trans,perc_trans))))
+        except NameError:
+            pssm_perc=np.concatenate((pssm_trans,perc_trans))
+
+    pssm_perc_data=np.concatenate((pssm_perc,data['RNA']),axis=1)
+#    print(pssm_perc_data[60])
+
+    clf = joblib.load(m)
+
+    predict_scores = clf.decision_function(pssm_perc_data)
+    preds['RNA']=preds['RNA']+predict_scores
+
+    del pssm_perc
+    del pssm_perc_data
+
+for la in preds.keys():
+    preds[la]=100*(2*sigmoid(preds[la]/3)-1)
+preds['Protein'][preds['Protein']>0]=(preds['Protein'][preds['Protein']>0]-0)/(51.56608-0)*100
+
+preds['Protein'][preds['Protein']>100]=100
+
+if outfile:
+    outf = open(outfile,'w')
+    sys.stdout=outf
+
+print('#Protein-, DNA- and RNA-binding Hotspots prediction')
+print('#RI = Reliability index (score) for the prediciton (-100~100); Pred = Prediction (0,1,NA),NA means the position is not a binding residue or no binding label given')
+print('#','AA','Protein_RI','Protein_Pred','DNA_RI','DNA_Pred','RNA_RI','RNA_Pred',sep='\t')
+
+for pos in range(len(seq)):
+    line='Res_'+str(pos+1)+'\t'+seq[pos]
+    for la in ('Protein','DNA','RNA'): 
+        if binding_labels[la][pos]=='*' or binding_labels[la][pos]==0:
+            line = line+'\t'+'NA'+'\tNA'
+        elif preds[la][pos]> 0:
+            line = line+'\t'+str(int(round(preds[la][pos])))+'\t1'
+        else:
+            line = line+'\t'+str(int(round(preds[la][pos])))+'\t0'
+    print(line)
+
+
+

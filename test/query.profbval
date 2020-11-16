@@ -1,0 +1,127 @@
+* PROFout_out         file from FORTRAN PROF.f (output)
+*    
+*    -------------------------------
+*    Output from neural network (PROF)
+*    -------------------------------
+*     
+*    author: Burkhard Rost, Columbia Univ NYC / LION Heidelberg
+*    fax:    +1-212-305-7932
+*    email:  rost@columbia.edu
+*    www:    http://cubic.bioc.columbia.edu/
+*     
+*    All rights reserved.
+*     
+*    date:                          
+*    
+*    
+*    MODEPRED                     sec
+*    MODENET                      1st,unbal
+*    MODEIN                       win=5,loc=aa
+*    MODEJOB                      mode_of_job
+*    TRN-, TRG-, ERRTYPE              ONLINE,       SIG,   DELTASQ 
+*    NUMIN, -HID, -OUT                 209,      35,       2 
+*    NUMSAM                             84
+*    STPSWPMAX, -MAX, -INF               0,       0,       1 
+*    ERRBINSTOP, -STOP                   0,  0.0000
+*    EPSILON, ALPHA, TEMP           0.0300,  0.3000,  1.0000 
+*    
+* --------------------
+* overall: (A,T25,I8)
+NUMOUT:                        2
+NUMSAM:                       84
+MODEPRED:               sec
+MODENET:                1st,unbal
+MODEIN:                 win=5,loc=aa
+MODEJOB:                mode_of_job
+* --------------------
+* accuracy: (A,T25,I8)
+STPINF:                        1
+STP:                           1
+ERRBIN:                  97.6190
+ERR:                      0.3154
+* --------------------
+* out vec: (I8,A1,100I4)
+       1   99   0
+       2   83  16
+       3   79  20
+       4   79  19
+       5   64  35
+       6   67  32
+       7   59  40
+       8   58  41
+       9   53  46
+      10   53  46
+      11   51  49
+      12   55  44
+      13   53  46
+      14   55  44
+      15   53  46
+      16   57  42
+      17   60  38
+      18   72  27
+      19   73  26
+      20   75  24
+      21   70  29
+      22   64  35
+      23   70  30
+      24   63  36
+      25   48  52
+      26   52  47
+      27   50  49
+      28   53  47
+      29   44  56
+      30   54  45
+      31   62  38
+      32   67  32
+      33   50  50
+      34   58  41
+      35   61  39
+      36   44  55
+      37   51  49
+      38   54  45
+      39   54  45
+      40   49  50
+      41   58  42
+      42   64  35
+      43   66  34
+      44   68  32
+      45   67  32
+      46   63  36
+      47   49  50
+      48   37  62
+      49   33  66
+      50   32  67
+      51   33  66
+      52   33  66
+      53   46  53
+      54   53  46
+      55   55  44
+      56   48  52
+      57   45  54
+      58   39  60
+      59   37  62
+      60   45  54
+      61   52  46
+      62   48  51
+      63   50  49
+      64   54  44
+      65   47  52
+      66   31  69
+      67   22  78
+      68   19  80
+      69   19  81
+      70   26  73
+      71   38  61
+      72   48  51
+      73   58  41
+      74   71  28
+      75   62  37
+      76   51  48
+      77   40  59
+      78   35  64
+      79   37  63
+      80   32  67
+      81   47  52
+      82   73  27
+      83   77  22
+      84   83  16
