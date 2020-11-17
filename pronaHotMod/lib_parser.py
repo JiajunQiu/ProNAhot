@@ -23,29 +23,11 @@ def parse_sequence(d_in, d_fasta):
 		seq_fasta += ''.join(line.split())	#Get rid of those strange whitespaces within the sequence!
 	
 	if seq_in != seq_fasta:
-		sys.exit("Error!!!ProNA2019 can not be done for protein %s.\nProtein sequence of *in and * fasta are not identical.\npp seems to work with different sequences.\n" % d_fasta.split('\n')[0][1:])
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nProtein sequence of *in and * fasta are not identical.\npp seems to work with different sequences.\n" % d_fasta.split('\n')[0][1:])
 	
 	return {'seq':seq_in},d_fasta.split('\n')[0][1:]
 		
 
-def parse_sequence(d_in, d_fasta):
-	"""
-	pp returns two sequence files: query.in and query.fasta. No idea why.
-	Here we check that both are the same and return the sequence.
-	"""
-	seq_in = ''
-	seq_fasta = ''
-	for line in d_in.split('\n')[1:]:
-		if not line: continue
-		seq_in += line
-	for line in d_fasta.split('\n')[1:]:
-		if not line: continue
-		seq_fasta += ''.join(line.split())	#Get rid of those strange whitespaces within the sequence!
-	
-	if seq_in != seq_fasta:
-		raise ParseError('pp seems to work with different sequences.')
-	
-	return {'seq':seq_in},d_fasta.split('\n')[0][1:]
 		
 def parse_blast_reorder(d_blast):
 	ori_order='ARNDCQEGHILKMFPSTWYV'

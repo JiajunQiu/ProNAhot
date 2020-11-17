@@ -2,8 +2,8 @@
 import os
 import os.path
 import sys
-from pronaHotMod.lib_parser import *
-from pronaHotMod.lib_featurize import *
+from ProNAhotMod.lib_parser import *
+from ProNAhotMod.lib_featurize import *
 import random
 import numpy as np
 
@@ -51,7 +51,7 @@ def extract_features(pp_path ,feature_file):
 		pp_seq,pro = parse_sequence(d_in, d_fasta)
 		seq = pp_seq['seq']
 	except IOError:
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nFile *.in and/or *.fasta not found...\n" % pro )
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nFile *.in and/or *.fasta not found...\n" % pro )
 		
 	'''	
 	#1. Raw sequence?
@@ -65,21 +65,21 @@ def extract_features(pp_path ,feature_file):
 	try: 
 		d_blast = open(pp_path+"query.blastPsiMat").read()
 	except IOError: 
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nFile *.blastPsiMat not found...\n" % pro)
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nFile *.blastPsiMat not found...\n" % pro)
 	parsed_blast = parse_blast(d_blast)
 	if seq != parsed_blast['seq']:
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nDisagreement between pp sequence and blast sequence...\n" % pro)
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nDisagreement between pp sequence and blast sequence...\n" % pro)
 	blast_norm = True
 	
 	#5. PROFbval?
 	try:
 		d_bval = open(pp_path+"query.profbval").read()
 	except IOError:
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nFile *.profbval not found...\n" % pro)
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nFile *.profbval not found...\n" % pro)
 	parsed_bval = parse_profbval(d_bval)
 	#We can only check here for identical lengths since bval doesn't return a sequence
 	if len(seq) != len(parsed_bval['prd_raw1']) != len(parsed_bval['prd_raw2']):
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nDisagreement between pp sequence and PROFbval sequence...\n" % pro)
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nDisagreement between pp sequence and PROFbval sequence...\n" % pro)
 	
 	bval_norm = True
 
@@ -101,10 +101,10 @@ def extract_features(pp_path ,feature_file):
 	try:
 		d_md = open(pp_path+"query.mdisorder").read()
 	except IOError:
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nFile *.mdisorder not found...\n" % pro)
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nFile *.mdisorder not found...\n" % pro)
 	parsed_md = parse_md(d_md)
 	if seq != parsed_md['seq']:
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nDisagreement between pp sequence and md sequence...\n" % pro)
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nDisagreement between pp sequence and md sequence...\n" % pro)
 		
 	md_norm = True
 	
@@ -114,10 +114,10 @@ def extract_features(pp_path ,feature_file):
 	try:
 		d_profsecacc = open(pp_path+"query.profRdb").read()
 	except IOError:
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nFile *.profRdb not found...\n" % pro)
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nFile *.profRdb not found...\n" % pro)
 	parsed_profsecacc = parse_profsecacc(d_profsecacc)
 	if seq != parsed_profsecacc['seq']:
-		sys.exit("Error!!!ProNAHot can not be done for protein %s.\nDisagreement between pp sequence and profseccacc sequence...\n" % pro)
+		sys.exit("Error!!!ProNAhot can not be done for protein %s.\nDisagreement between pp sequence and profseccacc sequence...\n" % pro)
 	profsecacc_norm = True
 	parsed_sec = ''.join(parsed_profsecacc['PHEL'])
 	parsed_acc = ''.join(parsed_profsecacc['Pbie'])
