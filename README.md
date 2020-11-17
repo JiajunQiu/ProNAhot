@@ -1,4 +1,4 @@
-# ProNAHot
+# ProNAhot
 ProNAhot: Predicting protein-DNA, protein-RNA and protein-protein binding hot-spots from sequence
 
 ProNAhot can distinguish between the binding hotspots and binding non-hotspots based on only sequence information,
