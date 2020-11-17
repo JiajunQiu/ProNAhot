@@ -4,12 +4,14 @@ ProNAhot can distinguish between the binding hotspots and binding non-hotspots b
 which means you need to label the binding residues on the input protein before running ProNAhot.
 In case you don't have any binding information for your input protein, 
 we suggest you run ProNA2020 from predictprotein.org to get predicted protein-, DNA- and RNA-binding residues for your input protein.
-And you can submit the output of ProNA2020 directly to ProNAhot
+And you can submit the output of ProNA2020 directly to ProNAhot.
 
 ## How to install
-After downloading, you need install some necessary python package and sofware before you use ProNA2019.
+git clone https://github.com/JiajunQiu/ProNAhot.git
+cd ProNAhot
+python3 setup.py install
 
-#### Python3 package:
+or you can install the following dependency manually：
 
 pybrain (>=0.3.3)
 
