@@ -48,10 +48,13 @@ ProNAhot: Predicting protein-DNA, protein-RNA and protein-protein binding hot-
 spots from sequence
 
 Options:
+
   -h, --help   show this help message and exit
+  
   -p PATH      Directory containing the PredictProtein output files with the
                suffixes .in .fasta .blastPsiMat .profbval .mdisorder
                .consurf.grades and .profRdb.
+               
   -l LABEL     Please label the binding residues for your input protein and
                the format can be found in file ./test/binding_label.example.
                ProNAHot can only distinguish between binding hotspots and
@@ -59,4 +62,5 @@ Options:
                information of your input protein, you can run ProNA2020 from
                predictprotein.org and submit the output here with the suffixe
                .prona.
+               
   -o FILENAME  Output file. If not specified, the output is written to STDOUT
